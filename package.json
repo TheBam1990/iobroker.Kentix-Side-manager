@@ -1,0 +1,36 @@
+{
+  "name": "iobroker.kentix-sitemanager",
+  "version": "0.1.0",
+  "description": "ioBroker adapter for KentixONE SiteManager devices using the local HTTP/REST API",
+  "author": "ioBroker User",
+  "homepage": "https://github.com/your-name/ioBroker.kentix-sitemanager",
+  "license": "MIT",
+  "main": "main.js",
+  "keywords": [
+    "iobroker",
+    "kentix",
+    "sitemanager",
+    "kentixone",
+    "alarm",
+    "monitoring"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-name/ioBroker.kentix-sitemanager.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.2.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node main.js",
+    "test": "node --check main.js"
+  },
+  "bugs": {
+    "url": "https://github.com/your-name/ioBroker.kentix-sitemanager/issues"
+  },
+  "readmeFilename": "README.md"
+}

@@ -1,0 +1,162 @@
+{
+  "type": "tabs",
+  "items": {
+    "connection": {
+      "type": "panel",
+      "label": {
+        "en": "Connection",
+        "de": "Verbindung"
+      },
+      "items": {
+        "enabled": {
+          "type": "checkbox",
+          "label": {
+            "en": "Enable communication",
+            "de": "Kommunikation aktivieren"
+          },
+          "xs": 12,
+          "sm": 6
+        },
+        "host": {
+          "type": "text",
+          "label": {
+            "en": "SiteManager IP address",
+            "de": "SiteManager IP-Adresse"
+          },
+          "help": {
+            "en": "Only the IP address is required for normal operation. Example: 192.168.2.50",
+            "de": "Im Normalfall reicht nur die IP-Adresse. Beispiel: 192.168.2.50"
+          },
+          "newLine": true,
+          "xs": 12,
+          "sm": 6
+        },
+        "protocol": {
+          "type": "select",
+          "label": {
+            "en": "Protocol",
+            "de": "Protokoll"
+          },
+          "options": [
+            { "label": "Auto", "value": "auto" },
+            { "label": "HTTPS", "value": "https" },
+            { "label": "HTTP", "value": "http" }
+          ],
+          "xs": 12,
+          "sm": 6
+        },
+        "port": {
+          "type": "number",
+          "label": {
+            "en": "Port, 0 = automatic",
+            "de": "Port, 0 = automatisch"
+          },
+          "min": 0,
+          "max": 65535,
+          "xs": 12,
+          "sm": 6
+        },
+        "pollIntervalMs": {
+          "type": "number",
+          "label": {
+            "en": "Poll interval in ms",
+            "de": "Abfrageintervall in ms"
+          },
+          "min": 5000,
+          "xs": 12,
+          "sm": 6
+        },
+        "requestTimeoutMs": {
+          "type": "number",
+          "label": {
+            "en": "Request timeout in ms",
+            "de": "Anfrage-Timeout in ms"
+          },
+          "min": 1000,
+          "xs": 12,
+          "sm": 6
+        },
+        "allowSelfSigned": {
+          "type": "checkbox",
+          "label": {
+            "en": "Allow self-signed HTTPS certificate",
+            "de": "Selbstsigniertes HTTPS-Zertifikat erlauben"
+          },
+          "xs": 12,
+          "sm": 6
+        },
+        "rawResponses": {
+          "type": "checkbox",
+          "label": {
+            "en": "Store raw JSON responses",
+            "de": "Rohes JSON speichern"
+          },
+          "xs": 12,
+          "sm": 6
+        }
+      }
+    },
+    "auth": {
+      "type": "panel",
+      "label": {
+        "en": "Optional authentication",
+        "de": "Optionale Anmeldung"
+      },
+      "items": {
+        "username": {
+          "type": "text",
+          "label": {
+            "en": "Username",
+            "de": "Benutzername"
+          },
+          "xs": 12,
+          "sm": 6
+        },
+        "password": {
+          "type": "password",
+          "label": {
+            "en": "Password",
+            "de": "Passwort"
+          },
+          "xs": 12,
+          "sm": 6
+        },
+        "apiToken": {
+          "type": "password",
+          "label": {
+            "en": "API token / bearer token",
+            "de": "API-Token / Bearer-Token"
+          },
+          "help": {
+            "en": "Optional. If set, the adapter uses Bearer authentication instead of username/password.",
+            "de": "Optional. Wenn gesetzt, verwendet der Adapter Bearer-Authentifizierung statt Benutzer/Passwort."
+          },
+          "xs": 12,
+          "sm": 12
+        }
+      }
+    },
+    "advanced": {
+      "type": "panel",
+      "label": {
+        "en": "Advanced",
+        "de": "Erweitert"
+      },
+      "items": {
+        "endpoints": {
+          "type": "text",
+          "label": {
+            "en": "Custom API endpoints",
+            "de": "Eigene API-Endpunkte"
+          },
+          "help": {
+            "en": "Optional JSON array or comma/newline list. Leave empty for automatic endpoint probing.",
+            "de": "Optionales JSON-Array oder Komma-/Zeilenliste. Leer lassen fuer automatische Endpunkt-Erkennung."
+          },
+          "xs": 12,
+          "sm": 12
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "common": {
+    "name": "kentix-sitemanager",
+    "version": "0.1.0",
+    "news": {
+      "0.1.0": {
+        "en": "Initial adapter with automatic API endpoint discovery, dynamic data mirroring and alarm arm/disarm controls",
+        "de": "Erste Adapterversion mit automatischer API-Endpunkt-Erkennung, dynamischer Datenspiegelung und Alarm-Scharf/Unscharf-Steuerung"
+      }
+    },
+    "titleLang": {
+      "en": "Kentix SiteManager",
+      "de": "Kentix SiteManager"
+    },
+    "desc": {
+      "en": "Reads KentixONE SiteManager data and provides alarm arm/disarm controls.",
+      "de": "Liest KentixONE SiteManager Daten und stellt Alarm-Scharf/Unscharf-Steuerungen bereit."
+    },
+    "authors": [
+      "ioBroker User"
+    ],
+    "keywords": [
+      "kentix",
+      "kentixone",
+      "sitemanager",
+      "alarm",
+      "monitoring",
+      "security"
+    ],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "main": "main.js",
+    "icon": "kentix-sitemanager.svg",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/your-name/ioBroker.kentix-sitemanager/main/admin/kentix-sitemanager.svg",
+    "readme": "https://github.com/your-name/ioBroker.kentix-sitemanager/blob/main/README.md",
+    "loglevel": "info",
+    "mode": "daemon",
+    "type": "security",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=5.0.0"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=6.0.0"
+      }
+    ]
+  },
+  "native": {
+    "enabled": true,
+    "host": "",
+    "protocol": "auto",
+    "port": 0,
+    "pollIntervalMs": 15000,
+    "requestTimeoutMs": 7000,
+    "username": "",
+    "password": "",
+    "apiToken": "",
+    "allowSelfSigned": true,
+    "rawResponses": true,
+    "endpoints": ""
+  },
+  "objects": [],
+  "instanceObjects": []
+}
