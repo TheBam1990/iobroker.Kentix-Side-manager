@@ -20,16 +20,29 @@
         "host": {
           "type": "text",
           "label": {
-            "en": "SiteManager IP address",
-            "de": "SiteManager IP-Adresse"
+            "en": "KentixONE IP address",
+            "de": "KentixONE IP-Adresse"
           },
           "help": {
-            "en": "Only the IP address is required for normal operation. Example: 192.168.2.50",
-            "de": "Im Normalfall reicht nur die IP-Adresse. Beispiel: 192.168.2.50"
+            "en": "IP address of the KentixONE SiteManager, AlarmManager, AccessManager or other SmartAPI device.",
+            "de": "IP-Adresse vom KentixONE SiteManager, AlarmManager, AccessManager oder einem anderen SmartAPI-Geraet."
           },
           "newLine": true,
           "xs": 12,
           "sm": 6
+        },
+        "apiToken": {
+          "type": "password",
+          "label": {
+            "en": "SmartAPI bearer token",
+            "de": "SmartAPI Bearer-Token"
+          },
+          "help": {
+            "en": "Required. Create/copy the personal API bearer token in the KentixONE user profile.",
+            "de": "Erforderlich. Den persoenlichen API Bearer-Token im KentixONE Benutzerprofil erstellen/kopieren."
+          },
+          "xs": 12,
+          "sm": 12
         },
         "protocol": {
           "type": "select",
@@ -96,40 +109,22 @@
         }
       }
     },
-    "auth": {
+    "alarm": {
       "type": "panel",
       "label": {
-        "en": "Optional authentication",
-        "de": "Optionale Anmeldung"
+        "en": "Alarmgroups",
+        "de": "Alarmgruppen"
       },
       "items": {
-        "username": {
+        "alarmGroupId": {
           "type": "text",
           "label": {
-            "en": "Username",
-            "de": "Benutzername"
-          },
-          "xs": 12,
-          "sm": 6
-        },
-        "password": {
-          "type": "password",
-          "label": {
-            "en": "Password",
-            "de": "Passwort"
-          },
-          "xs": 12,
-          "sm": 6
-        },
-        "apiToken": {
-          "type": "password",
-          "label": {
-            "en": "API token / bearer token",
-            "de": "API-Token / Bearer-Token"
+            "en": "Fixed alarmgroup IDs",
+            "de": "Feste Alarmgruppen-IDs"
           },
           "help": {
-            "en": "Optional. If set, the adapter uses Bearer authentication instead of username/password.",
-            "de": "Optional. Wenn gesetzt, verwendet der Adapter Bearer-Authentifizierung statt Benutzer/Passwort."
+            "en": "Optional. Comma-separated IDs used by global arm/disarm commands. Leave empty to use discovered alarmgroups.",
+            "de": "Optional. Kommagetrennte IDs fuer globale Scharf/Unscharf-Befehle. Leer lassen, um erkannte Alarmgruppen zu nutzen."
           },
           "xs": 12,
           "sm": 12
@@ -146,12 +141,12 @@
         "endpoints": {
           "type": "text",
           "label": {
-            "en": "Custom API endpoints",
-            "de": "Eigene API-Endpunkte"
+            "en": "Custom SmartAPI endpoints",
+            "de": "Eigene SmartAPI-Endpunkte"
           },
           "help": {
-            "en": "Optional JSON array or comma/newline list. Leave empty for automatic endpoint probing.",
-            "de": "Optionales JSON-Array oder Komma-/Zeilenliste. Leer lassen fuer automatische Endpunkt-Erkennung."
+            "en": "Optional JSON array or comma/newline list. Leave empty for the default official SmartAPI endpoints.",
+            "de": "Optionales JSON-Array oder Komma-/Zeilenliste. Leer lassen fuer die offiziellen Standard-SmartAPI-Endpunkte."
           },
           "xs": 12,
           "sm": 12

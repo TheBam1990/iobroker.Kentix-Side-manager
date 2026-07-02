@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="520" viewBox="0 0 920 520" role="img" aria-label="ioBroker object tree for Kentix adapter">
+  <rect width="920" height="520" fill="#f6f8fb"/>
+  <rect x="34" y="32" width="852" height="456" rx="8" fill="#fff" stroke="#cfd7e3"/>
+  <text x="64" y="72" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#24384d">Objekte nach dem ersten Poll</text>
+  <g font-family="Arial, sans-serif" font-size="17" fill="#26384a">
+    <text x="82" y="122">kentix-sitemanager.0</text>
+    <text x="122" y="162">info.connection</text>
+    <text x="122" y="192">info.baseUrl</text>
+    <text x="122" y="222">api.system_info.*</text>
+    <text x="122" y="252">api.alarmgroups.*</text>
+    <text x="122" y="282">raw.api_alarmgroups</text>
+    <text x="122" y="326">alarmgroups.&lt;id&gt;.name</text>
+    <text x="122" y="356">alarmgroups.&lt;id&gt;.control.arm</text>
+    <text x="122" y="386">alarmgroups.&lt;id&gt;.control.disarm</text>
+    <text x="122" y="416">alarmgroups.&lt;id&gt;.control.quit</text>
+    <text x="520" y="326">control.armAll</text>
+    <text x="520" y="356">control.disarmAll</text>
+    <text x="520" y="386">control.quitAll</text>
+    <text x="520" y="416">control.refresh</text>
+  </g>
+  <g stroke="#9aabbc" stroke-width="2" fill="none">
+    <path d="M96 130v290"/>
+    <path d="M100 156h16"/>
+    <path d="M100 186h16"/>
+    <path d="M100 216h16"/>
+    <path d="M100 246h16"/>
+    <path d="M100 276h16"/>
+    <path d="M100 320h16"/>
+    <path d="M100 350h16"/>
+    <path d="M100 380h16"/>
+    <path d="M100 410h16"/>
+  </g>
+  <rect x="504" y="292" width="248" height="150" rx="6" fill="#eef8f1" stroke="#b9d8c0"/>
+  <text x="530" y="292" font-family="Arial, sans-serif" font-size="15" fill="#2c6b3f">Globale Taster</text>
+</svg>

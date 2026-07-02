@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="500" viewBox="0 0 920 500" role="img" aria-label="ioBroker adapter settings">
+  <rect width="920" height="500" fill="#f6f8fb"/>
+  <rect x="32" y="30" width="856" height="440" rx="8" fill="#fff" stroke="#cfd7e3"/>
+  <text x="62" y="70" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#24384d">ioBroker Adapter: Kentix SiteManager</text>
+  <rect x="62" y="104" width="796" height="54" rx="5" fill="#eef3f8" stroke="#c9d4df"/>
+  <text x="84" y="138" font-family="Arial, sans-serif" font-size="18" fill="#24384d">Verbindung</text>
+  <text x="84" y="202" font-family="Arial, sans-serif" font-size="15" fill="#4e5f70">KentixONE IP-Adresse</text>
+  <rect x="84" y="216" width="300" height="38" rx="4" fill="#fff" stroke="#b9c6d3"/>
+  <text x="102" y="241" font-family="Arial, sans-serif" font-size="16" fill="#24384d">192.168.2.xxx</text>
+  <text x="430" y="202" font-family="Arial, sans-serif" font-size="15" fill="#4e5f70">Protokoll</text>
+  <rect x="430" y="216" width="170" height="38" rx="4" fill="#fff" stroke="#b9c6d3"/>
+  <text x="448" y="241" font-family="Arial, sans-serif" font-size="16" fill="#24384d">Auto / HTTPS</text>
+  <text x="84" y="294" font-family="Arial, sans-serif" font-size="15" fill="#4e5f70">SmartAPI Bearer-Token</text>
+  <rect x="84" y="308" width="516" height="38" rx="4" fill="#fff" stroke="#b9c6d3"/>
+  <text x="102" y="333" font-family="Arial, sans-serif" font-size="16" fill="#657487">••••••••••••••••••••••••••••••••</text>
+  <rect x="84" y="380" width="18" height="18" rx="3" fill="#2d7dd2"/>
+  <path d="M88 389l4 4 8-10" fill="none" stroke="#fff" stroke-width="3"/>
+  <text x="114" y="395" font-family="Arial, sans-serif" font-size="16" fill="#24384d">Selbstsigniertes HTTPS-Zertifikat erlauben</text>
+  <rect x="430" y="380" width="18" height="18" rx="3" fill="#2d7dd2"/>
+  <path d="M434 389l4 4 8-10" fill="none" stroke="#fff" stroke-width="3"/>
+  <text x="460" y="395" font-family="Arial, sans-serif" font-size="16" fill="#24384d">Rohes JSON speichern</text>
+</svg>

@@ -1,7 +1,7 @@
 {
   "name": "iobroker.kentix-sitemanager",
-  "version": "0.1.0",
-  "description": "ioBroker adapter for KentixONE SiteManager devices using the local HTTP/REST API",
+  "version": "0.2.0",
+  "description": "ioBroker adapter for KentixONE SiteManager devices using the official SmartAPI",
   "author": "ioBroker User",
   "homepage": "https://github.com/your-name/ioBroker.kentix-sitemanager",
   "license": "MIT",

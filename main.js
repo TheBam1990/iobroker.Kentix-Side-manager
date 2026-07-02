@@ -5,57 +5,17 @@ const https = require("https");
 const utils = require("@iobroker/adapter-core");
 
 const DEFAULT_ENDPOINTS = [
-    "/api/v1/system",
-    "/api/v1/status",
-    "/api/v1/devices",
-    "/api/v1/device",
-    "/api/v1/sensors",
-    "/api/v1/sensor",
-    "/api/v1/inputs",
-    "/api/v1/outputs",
-    "/api/v1/alarms",
-    "/api/v1/alarm",
-    "/api/v1/security",
-    "/api/v1/rooms",
-    "/api/v1/doors",
-    "/api/v1/access",
+    "/api/system/info",
     "/api/system",
-    "/api/status",
-    "/api/devices",
-    "/api/sensors",
-    "/api/alarm",
-    "/api/alarms",
-    "/rest/system",
-    "/rest/status",
-    "/rest/devices",
-    "/rest/sensors",
-    "/rest/alarm",
+    "/api/alarmgroups",
+    "/api/armstategroups/names",
+    "/api/log/alarm?per_page=10",
+    "/api/state/sync",
+    "/api/sitemanagers",
+    "/api/multisensors",
+    "/api/iomodules",
+    "/api/alarmmanagers",
 ];
-
-const ALARM_COMMANDS = {
-    arm: [
-        { method: "PUT", path: "/api/v1/alarm/armed", body: { armed: true } },
-        { method: "PUT", path: "/api/v1/alarm", body: { armed: true } },
-        { method: "PUT", path: "/api/v1/security", body: { armed: true } },
-        { method: "POST", path: "/api/v1/alarm/arm", body: {} },
-        { method: "POST", path: "/api/v1/security/arm", body: {} },
-        { method: "POST", path: "/api/alarm/arm", body: {} },
-    ],
-    disarm: [
-        { method: "PUT", path: "/api/v1/alarm/armed", body: { armed: false } },
-        { method: "PUT", path: "/api/v1/alarm", body: { armed: false } },
-        { method: "PUT", path: "/api/v1/security", body: { armed: false } },
-        { method: "POST", path: "/api/v1/alarm/disarm", body: {} },
-        { method: "POST", path: "/api/v1/security/disarm", body: {} },
-        { method: "POST", path: "/api/alarm/disarm", body: {} },
-    ],
-    partial: [
-        { method: "PUT", path: "/api/v1/alarm", body: { mode: "partial" } },
-        { method: "PUT", path: "/api/v1/security", body: { mode: "partial" } },
-        { method: "POST", path: "/api/v1/alarm/partial", body: {} },
-        { method: "POST", path: "/api/v1/security/partial", body: {} },
-    ],
-};
 
 class KentixSiteManagerAdapter extends utils.Adapter {
     constructor(options = {}) {
@@ -66,8 +26,10 @@ class KentixSiteManagerAdapter extends utils.Adapter {
 
         this.pollTimer = null;
         this.stopping = false;
-        this.endpointStates = new Map();
+        this.baseUrl = "";
         this.activeEndpoints = [];
+        this.alarmGroupIds = new Set();
+        this.alarmGroupObjectIds = new Map();
         this.knownObjects = new Set();
 
         this.on("ready", () => this.onReady());
@@ -83,18 +45,18 @@ class KentixSiteManagerAdapter extends utils.Adapter {
             port: Number(this.config.port || 0),
             pollIntervalMs: Math.max(Number(this.config.pollIntervalMs || 15000), 5000),
             requestTimeoutMs: Math.max(Number(this.config.requestTimeoutMs || 7000), 1000),
-            username: String(this.config.username || ""),
-            password: String(this.config.password || ""),
-            apiToken: String(this.config.apiToken || ""),
+            apiToken: String(this.config.apiToken || "").trim(),
             allowSelfSigned: this.config.allowSelfSigned !== false,
-            endpoints: this.parseEndpointConfig(this.config.endpoints),
             rawResponses: this.config.rawResponses === true || this.config.rawResponses === "true",
+            endpoints: this.parseEndpointConfig(this.config.endpoints),
+            alarmGroupId: String(this.config.alarmGroupId || "").trim(),
         };
     }
 
     async onReady() {
         await this.initObjects();
         await this.subscribeStatesAsync("control.*");
+        await this.subscribeStatesAsync("alarmgroups.*.control.*");
 
         if (!this.cfg.enabled) {
             this.log.info("Communication is disabled");
@@ -102,13 +64,22 @@ class KentixSiteManagerAdapter extends utils.Adapter {
             return;
         }
         if (!this.cfg.host) {
-            await this.setStateAsync("info.lastError", "No Kentix SiteManager IP configured", true);
-            this.log.warn("No Kentix SiteManager IP configured");
+            await this.failStartup("No Kentix SiteManager IP configured");
+            return;
+        }
+        if (!this.cfg.apiToken) {
+            await this.failStartup("No Kentix SmartAPI bearer token configured");
             return;
         }
 
         await this.poll(true);
         this.pollTimer = this.setInterval(() => void this.poll(false), this.cfg.pollIntervalMs);
+    }
+
+    async failStartup(message) {
+        await this.setStateAsync("info.connection", false, true);
+        await this.setStateAsync("info.lastError", message, true);
+        this.log.warn(message);
     }
 
     onUnload(callback) {
@@ -136,36 +107,29 @@ class KentixSiteManagerAdapter extends utils.Adapter {
                 await this.setStateAsync("control.refresh", false, true);
                 return;
             }
-            if (rel === "control.armFull" && state.val === true) {
-                await this.runAlarmCommand("arm");
-                await this.setStateAsync("control.armFull", false, true);
+
+            if (rel === "control.armAll" && state.val === true) {
+                await this.commandAllAlarmGroups("arm");
+                await this.setStateAsync("control.armAll", false, true);
                 return;
             }
-            if (rel === "control.disarm" && state.val === true) {
-                await this.runAlarmCommand("disarm");
-                await this.setStateAsync("control.disarm", false, true);
+            if (rel === "control.disarmAll" && state.val === true) {
+                await this.commandAllAlarmGroups("disarm");
+                await this.setStateAsync("control.disarmAll", false, true);
                 return;
             }
-            if (rel === "control.armPartial" && state.val === true) {
-                await this.runAlarmCommand("partial");
-                await this.setStateAsync("control.armPartial", false, true);
+            if (rel === "control.quitAll" && state.val === true) {
+                await this.commandAllAlarmGroups("quit");
+                await this.setStateAsync("control.quitAll", false, true);
                 return;
             }
-            if (rel === "control.alarmArmed") {
-                await this.runAlarmCommand(state.val === true ? "arm" : "disarm");
-                return;
-            }
-            if (rel === "control.alarmMode") {
-                const mode = String(state.val || "").toLowerCase();
-                if (["arm", "armed", "full", "on", "scharf"].includes(mode)) {
-                    await this.runAlarmCommand("arm");
-                } else if (["partial", "part", "teil", "intern"].includes(mode)) {
-                    await this.runAlarmCommand("partial");
-                } else if (["disarm", "disarmed", "off", "unscharf"].includes(mode)) {
-                    await this.runAlarmCommand("disarm");
-                } else {
-                    throw new Error(`Unknown alarm mode "${state.val}"`);
-                }
+
+            const groupCommand = rel.match(/^alarmgroups\.([^.]*)\.control\.(arm|disarm|quit)$/);
+            if (groupCommand && state.val === true) {
+                const groupId = this.alarmGroupObjectIds.get(groupCommand[1]) || groupCommand[1];
+                const command = groupCommand[2];
+                await this.commandAlarmGroup(groupId, command);
+                await this.setStateAsync(rel, false, true);
             }
         } catch (error) {
             await this.setStateAsync("info.lastCommandError", error.message, true);
@@ -182,16 +146,15 @@ class KentixSiteManagerAdapter extends utils.Adapter {
         await this.ensureState("info.lastError", "Last error", "string", "text", true, false);
         await this.ensureState("info.lastCommandError", "Last command error", "string", "text", true, false);
 
-        await this.ensureChannel("control", "Control");
+        await this.ensureChannel("control", "Global control");
         await this.ensureState("control.refresh", "Refresh now", "boolean", "button", false, true);
-        await this.ensureState("control.alarmArmed", "Alarm armed", "boolean", "switch", false, true);
-        await this.ensureState("control.alarmMode", "Alarm mode: arm, partial, disarm", "string", "text", false, true);
-        await this.ensureState("control.armFull", "Arm alarm", "boolean", "button", false, true);
-        await this.ensureState("control.armPartial", "Partially arm alarm", "boolean", "button", false, true);
-        await this.ensureState("control.disarm", "Disarm alarm", "boolean", "button", false, true);
+        await this.ensureState("control.armAll", "Arm all discovered alarmgroups", "boolean", "button", false, true);
+        await this.ensureState("control.disarmAll", "Disarm all discovered alarmgroups", "boolean", "button", false, true);
+        await this.ensureState("control.quitAll", "Quit all discovered alarmgroups", "boolean", "button", false, true);
 
-        await this.ensureChannel("api", "Kentix API data");
+        await this.ensureChannel("api", "Kentix SmartAPI data");
         await this.ensureChannel("raw", "Raw JSON responses");
+        await this.ensureChannel("alarmgroups", "Alarmgroups");
     }
 
     parseEndpointConfig(value) {
@@ -211,25 +174,27 @@ class KentixSiteManagerAdapter extends utils.Adapter {
 
     async poll(forceDiscover) {
         try {
-            if (forceDiscover || this.activeEndpoints.length === 0) {
-                await this.discoverEndpoints();
+            if (forceDiscover || !this.baseUrl) {
+                await this.discoverBaseUrl();
             }
 
             const results = {};
-            for (const endpoint of this.activeEndpoints) {
+            for (const path of this.activeEndpoints) {
                 try {
-                    const data = await this.request("GET", endpoint.path);
-                    results[endpoint.path] = data;
-                    await this.storeEndpoint(endpoint.path, data);
+                    const data = await this.request("GET", path);
+                    results[path] = data;
+                    await this.storeEndpoint(path, data);
+                    if (path.startsWith("/api/alarmgroups")) {
+                        await this.storeAlarmGroups(data);
+                    }
                 } catch (error) {
-                    this.log.debug(`Endpoint ${endpoint.path} failed: ${error.message}`);
+                    this.log.debug(`Endpoint ${path} failed: ${error.message}`);
                 }
             }
 
             await this.setStateAsync("info.connection", true, true);
             await this.setStateAsync("info.lastError", "", true);
             await this.setStateAsync("info.lastUpdate", new Date().toISOString(), true);
-            this.updateAlarmControlFromData(results);
         } catch (error) {
             await this.setStateAsync("info.connection", false, true);
             await this.setStateAsync("info.lastError", error.message, true);
@@ -237,37 +202,25 @@ class KentixSiteManagerAdapter extends utils.Adapter {
         }
     }
 
-    async discoverEndpoints() {
+    async discoverBaseUrl() {
         const candidates = this.buildBaseCandidates();
-        const endpoints = this.cfg.endpoints;
-        const found = [];
-        let selectedBase = "";
         let lastError = "";
 
         for (const base of candidates) {
-            for (const path of endpoints) {
-                try {
-                    const data = await this.request("GET", path, undefined, base);
-                    if (data !== undefined) {
-                        found.push({ base, path });
-                        selectedBase = base;
-                    }
-                } catch (error) {
-                    lastError = error.message;
-                }
+            try {
+                await this.request("GET", "/api/system/info", undefined, base);
+                this.baseUrl = base;
+                this.activeEndpoints = this.cfg.endpoints;
+                await this.setStateAsync("info.baseUrl", base, true);
+                await this.setStateAsync("info.activeEndpoints", JSON.stringify(this.activeEndpoints), true);
+                this.log.info(`Kentix SmartAPI detected at ${base}`);
+                return;
+            } catch (error) {
+                lastError = error.message;
             }
-            if (found.length > 0) break;
         }
 
-        if (found.length === 0) {
-            throw new Error(`No usable Kentix API endpoint found. Last error: ${lastError}`);
-        }
-
-        this.baseUrl = selectedBase;
-        this.activeEndpoints = found.map(item => ({ path: item.path }));
-        await this.setStateAsync("info.baseUrl", selectedBase, true);
-        await this.setStateAsync("info.activeEndpoints", JSON.stringify(this.activeEndpoints.map(e => e.path)), true);
-        this.log.info(`Kentix API detected at ${selectedBase}; endpoints: ${this.activeEndpoints.map(e => e.path).join(", ")}`);
+        throw new Error(`Kentix SmartAPI not reachable. Last error: ${lastError}`);
     }
 
     buildBaseCandidates() {
@@ -295,15 +248,11 @@ class KentixSiteManagerAdapter extends utils.Adapter {
             const payload = body === undefined ? undefined : JSON.stringify(body);
             const headers = {
                 Accept: "application/json",
+                Authorization: `Bearer ${this.cfg.apiToken}`,
             };
             if (payload !== undefined) {
                 headers["Content-Type"] = "application/json";
                 headers["Content-Length"] = Buffer.byteLength(payload);
-            }
-            if (this.cfg.apiToken) {
-                headers.Authorization = `Bearer ${this.cfg.apiToken}`;
-            } else if (this.cfg.username || this.cfg.password) {
-                headers.Authorization = `Basic ${Buffer.from(`${this.cfg.username}:${this.cfg.password}`).toString("base64")}`;
             }
 
             const options = {
@@ -322,8 +271,12 @@ class KentixSiteManagerAdapter extends utils.Adapter {
                 res.on("data", chunk => chunks.push(chunk));
                 res.on("end", () => {
                     const text = Buffer.concat(chunks).toString("utf8");
+                    if (res.statusCode === 204) {
+                        resolve({});
+                        return;
+                    }
                     if (res.statusCode < 200 || res.statusCode >= 300) {
-                        reject(new Error(`${method} ${path} HTTP ${res.statusCode}: ${text.slice(0, 200)}`));
+                        reject(new Error(`${method} ${path} HTTP ${res.statusCode}: ${text.slice(0, 300)}`));
                         return;
                     }
                     if (!text.trim()) {
@@ -333,17 +286,66 @@ class KentixSiteManagerAdapter extends utils.Adapter {
                     try {
                         resolve(JSON.parse(text));
                     } catch {
-                        reject(new Error(`${method} ${path} returned non-JSON response`));
+                        reject(new Error(`${method} ${path} returned non-JSON response. Check Accept header/token.`));
                     }
                 });
             });
-            req.on("timeout", () => {
-                req.destroy(new Error(`${method} ${path} timeout`));
-            });
+            req.on("timeout", () => req.destroy(new Error(`${method} ${path} timeout`)));
             req.on("error", reject);
             if (payload !== undefined) req.write(payload);
             req.end();
         });
+    }
+
+    async storeAlarmGroups(data) {
+        const groups = Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : [];
+        for (const group of groups) {
+            if (!group || group.id === undefined || group.id === null) continue;
+            const id = String(group.id);
+            const objectId = this.safeId(id);
+            this.alarmGroupIds.add(id);
+            this.alarmGroupObjectIds.set(objectId, id);
+            const base = `alarmgroups.${objectId}`;
+            await this.ensureChannel(base, group.name || `Alarmgroup ${id}`);
+            await this.ensureState(`${base}.id`, "ID", "string", "text", true, false);
+            await this.ensureState(`${base}.name`, "Name", "string", "text", true, false);
+            await this.ensureState(`${base}.rawJson`, "Raw JSON", "string", "json", true, false);
+            await this.ensureChannel(`${base}.control`, "Control");
+            await this.ensureState(`${base}.control.arm`, "Arm alarmgroup", "boolean", "button", false, true);
+            await this.ensureState(`${base}.control.disarm`, "Disarm alarmgroup", "boolean", "button", false, true);
+            await this.ensureState(`${base}.control.quit`, "Quit alarmgroup", "boolean", "button", false, true);
+            await this.setStateAsync(`${base}.id`, id, true);
+            await this.setStateAsync(`${base}.name`, group.name || "", true);
+            await this.setStateAsync(`${base}.rawJson`, JSON.stringify(group), true);
+        }
+    }
+
+    async commandAllAlarmGroups(command) {
+        const ids = new Set(this.alarmGroupIds);
+        if (this.cfg.alarmGroupId) {
+            this.cfg.alarmGroupId.split(/[,\s]+/).filter(Boolean).forEach(id => ids.add(id));
+        }
+        if (ids.size === 0) {
+            await this.poll(true);
+        }
+        const finalIds = new Set(this.alarmGroupIds);
+        if (this.cfg.alarmGroupId) {
+            this.cfg.alarmGroupId.split(/[,\s]+/).filter(Boolean).forEach(id => finalIds.add(id));
+        }
+        if (finalIds.size === 0) throw new Error("No alarmgroups discovered/configured");
+        for (const id of finalIds) {
+            await this.commandAlarmGroup(id, command);
+        }
+    }
+
+    async commandAlarmGroup(groupId, command) {
+        if (!this.baseUrl) await this.discoverBaseUrl();
+        const id = encodeURIComponent(String(groupId));
+        const path = `/api/alarmgroups/${id}/${command}`;
+        await this.request("PUT", path);
+        await this.setStateAsync("info.lastCommandError", "", true);
+        this.log.info(`Kentix alarmgroup ${groupId}: ${command} succeeded`);
+        await this.poll(false);
     }
 
     async storeEndpoint(path, data) {
@@ -358,7 +360,7 @@ class KentixSiteManagerAdapter extends utils.Adapter {
 
     async flattenToStates(prefix, value) {
         if (value === null || value === undefined) {
-            await this.ensureDynamicState(prefix, "value", "string", true);
+            await this.ensureDynamicState(prefix, "Value", "string", true);
             await this.setStateAsync(prefix, "", true);
             return;
         }
@@ -394,65 +396,6 @@ class KentixSiteManagerAdapter extends utils.Adapter {
         await this.setStateAsync(prefix, this.normalizeStateValue(value), true);
     }
 
-    updateAlarmControlFromData(results) {
-        const flattened = [];
-        const visit = value => {
-            if (Array.isArray(value)) {
-                value.forEach(visit);
-            } else if (this.isObject(value)) {
-                for (const [key, child] of Object.entries(value)) {
-                    const lk = key.toLowerCase();
-                    if (lk.includes("armed") || lk.includes("alarm") || lk.includes("scharf") || lk.includes("mode")) {
-                        flattened.push({ key: lk, value: child });
-                    }
-                    visit(child);
-                }
-            }
-        };
-        visit(results);
-
-        for (const item of flattened) {
-            if (typeof item.value === "boolean" && (item.key.includes("armed") || item.key.includes("scharf"))) {
-                void this.setStateAsync("control.alarmArmed", item.value, true);
-                return;
-            }
-            if (typeof item.value === "string") {
-                const val = item.value.toLowerCase();
-                if (["armed", "arm", "full", "on", "scharf"].includes(val)) {
-                    void this.setStateAsync("control.alarmArmed", true, true);
-                    void this.setStateAsync("control.alarmMode", "arm", true);
-                    return;
-                }
-                if (["disarmed", "disarm", "off", "unscharf"].includes(val)) {
-                    void this.setStateAsync("control.alarmArmed", false, true);
-                    void this.setStateAsync("control.alarmMode", "disarm", true);
-                    return;
-                }
-            }
-        }
-    }
-
-    async runAlarmCommand(command) {
-        const attempts = ALARM_COMMANDS[command] || [];
-        let lastError = "";
-        if (!this.baseUrl) {
-            await this.discoverEndpoints();
-        }
-        for (const attempt of attempts) {
-            try {
-                await this.request(attempt.method, attempt.path, attempt.body);
-                await this.setStateAsync("info.lastCommandError", "", true);
-                await this.poll(true);
-                this.log.info(`Kentix alarm command ${command} succeeded via ${attempt.method} ${attempt.path}`);
-                return;
-            } catch (error) {
-                lastError = error.message;
-                this.log.debug(`Alarm command ${command} failed via ${attempt.method} ${attempt.path}: ${error.message}`);
-            }
-        }
-        throw new Error(`All ${command} command variants failed. Last error: ${lastError}`);
-    }
-
     isObject(value) {
         return value !== null && typeof value === "object" && !Array.isArray(value);
     }
@@ -485,11 +428,7 @@ class KentixSiteManagerAdapter extends utils.Adapter {
 
     async ensureChannel(id, name) {
         if (this.knownObjects.has(id)) return;
-        await this.setObjectNotExistsAsync(id, {
-            type: "channel",
-            common: { name },
-            native: {},
-        });
+        await this.setObjectNotExistsAsync(id, { type: "channel", common: { name }, native: {} });
         this.knownObjects.add(id);
     }
 
@@ -497,14 +436,7 @@ class KentixSiteManagerAdapter extends utils.Adapter {
         if (this.knownObjects.has(id)) return;
         await this.setObjectNotExistsAsync(id, {
             type: "state",
-            common: {
-                name,
-                type,
-                role,
-                read,
-                write,
-                unit,
-            },
+            common: { name, type, role, read, write, unit },
             native: {},
         });
         this.knownObjects.add(id);

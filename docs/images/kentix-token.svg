@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="420" viewBox="0 0 920 420" role="img" aria-label="KentixONE API token settings">
+  <rect width="920" height="420" fill="#f6f8fb"/>
+  <rect x="34" y="34" width="852" height="352" rx="8" fill="#fff" stroke="#cfd7e3"/>
+  <rect x="34" y="34" width="852" height="54" rx="8" fill="#1c2f42"/>
+  <text x="62" y="68" font-family="Arial, sans-serif" font-size="22" fill="#fff">KentixONE Benutzerprofil</text>
+  <rect x="70" y="124" width="250" height="220" rx="6" fill="#eef3f8" stroke="#c9d4df"/>
+  <circle cx="195" cy="180" r="42" fill="#2d7dd2"/>
+  <text x="171" y="189" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#fff">API</text>
+  <text x="108" y="255" font-family="Arial, sans-serif" font-size="17" fill="#273849">Benutzerprofil öffnen</text>
+  <text x="108" y="285" font-family="Arial, sans-serif" font-size="17" fill="#273849">SmartAPI Token kopieren</text>
+  <rect x="370" y="124" width="480" height="220" rx="6" fill="#ffffff" stroke="#c9d4df"/>
+  <text x="402" y="164" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#26384a">API Bearer Token</text>
+  <rect x="402" y="190" width="382" height="42" rx="4" fill="#f8fafc" stroke="#b9c6d3"/>
+  <text x="420" y="217" font-family="Arial, sans-serif" font-size="16" fill="#657487">••••••••••••••••••••••••••••••••••</text>
+  <rect x="402" y="260" width="138" height="42" rx="4" fill="#2d7dd2"/>
+  <text x="433" y="287" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#fff">Kopieren</text>
+  <text x="402" y="330" font-family="Arial, sans-serif" font-size="15" fill="#657487">Der ioBroker Adapter nutzt diesen Token als Authorization: Bearer ...</text>
+</svg>
